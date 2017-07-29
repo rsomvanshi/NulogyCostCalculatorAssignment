@@ -1,8 +1,9 @@
 package com.nulogy.assignment;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.nulogy.util.Utils;
 
 /*
  * Created by rsomvanshi on 07/29/2017
@@ -37,11 +38,11 @@ public class NupackCostEstimator {
         this.materialType = materialType;
     }
 
-    private float getCostAfterFlatMarkup() {
+    public float getCostAfterFlatMarkup() {
         return baseValue += baseValue * (FLAT_MARKUP_PERCENTAGE / 100);
     }
 
-    private float getCostAfterTotalMarkup() {
+    public float getCostAfterTotalMarkup() {
 
         String materialCategory = materialCategories.get(materialType.toLowerCase());
         float materialMarkup = materialBasedMarkupPercentage.get(materialCategory);
@@ -50,19 +51,6 @@ public class NupackCostEstimator {
         float totalMarkup = PER_PERSON_MARKUP_PERCENTAGE * noOfPersons + materialMarkup;
         float costAfterTotalMarkup = costAfterFlatMarkup + costAfterFlatMarkup * (totalMarkup / 100);
 
-        return roundOffCost(costAfterTotalMarkup);
+        return Utils.roundOffFloat(costAfterTotalMarkup);
     }
-
-    private float roundOffCost(float cost) {
-        BigDecimal bigDecimal = new BigDecimal(Float.toString(cost));
-        BigDecimal roundOff = bigDecimal.setScale(2, BigDecimal.ROUND_HALF_EVEN);
-        return roundOff.floatValue();
-    }
-
-    public static void main(String[] args) {
-        NupackCostEstimator costEstimatorObj = new NupackCostEstimator(1299.99f, 3, "food");
-        float costAfterTotalMarkup = costEstimatorObj.getCostAfterTotalMarkup();
-        System.out.println("Cost After Flat Markup is : " + costAfterTotalMarkup);
-    }
-
 }
