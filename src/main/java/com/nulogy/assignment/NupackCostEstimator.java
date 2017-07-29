@@ -2,34 +2,49 @@ package com.nulogy.assignment;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 
 import com.nulogy.assignment.util.Utils;
 
-/*
- * Created by rsomvanshi on 07/29/2017
+/**
+ * @author rsomvanshi
+ *
  */
-
 public class NupackCostEstimator {
 
     private float baseValue;
     private int noOfPersons;
     private String materialType;
 
-    private final float PER_PERSON_MARKUP_PERCENTAGE = 1.2f;
-    private final float FLAT_MARKUP_PERCENTAGE = 5f;
-    private static Map<String, Float> materialBasedMarkupPercentage = new HashMap<String, Float>();
+    // Load configurable markup percentage values
+    private static Map<String, Float> markupPercentageMap = new HashMap<String, Float>();
     static {
-        materialBasedMarkupPercentage.put("pharmaceuticals", 7.5f);
-        materialBasedMarkupPercentage.put("food", 13f);
-        materialBasedMarkupPercentage.put("electronics", 2f);
-        materialBasedMarkupPercentage.put("miscellaneous", 0f);
+        Properties properties = new Properties();
+        try {
+            properties.load(NupackCostEstimator.class.getClassLoader().getResourceAsStream("markup-percentage.properties"));
+        }
+        catch (Exception e) { 
+            e.printStackTrace();
+        }
+        for (final Entry<Object, Object> entry : properties.entrySet()) {
+            markupPercentageMap.put((String) entry.getKey(), Float.valueOf((String)entry.getValue()));
+        }
     };
 
-    private static Map<String, String> materialCategories = new HashMap<String, String>();
+    // Load configurable material types and categories
+    private static Map<String, String> materialCategoryMap = new HashMap<String, String>();
     static {
-        materialCategories.put("drugs", "pharmaceuticals");
-        materialCategories.put("food", "food");
-        materialCategories.put("books", "miscellaneous");
+        Properties properties = new Properties();
+        try {
+            properties.load(NupackCostEstimator.class.getClassLoader().getResourceAsStream("material-categories.properties"));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        for (final Entry<Object, Object> entry : properties.entrySet()) {
+            materialCategoryMap.put((String) entry.getKey(), (String)entry.getValue());
+        }
     };
 
     public NupackCostEstimator(float baseValue, int noOfPersons, String materialType) {
@@ -38,18 +53,48 @@ public class NupackCostEstimator {
         this.materialType = materialType;
     }
 
-    public float getCostAfterFlatMarkup() {
-        return baseValue += baseValue * (FLAT_MARKUP_PERCENTAGE / 100);
+    /** Get cost after applying flat markup percentage
+     * @return float
+     * @throws Exception
+     */
+    public float getCostAfterFlatMarkup() throws Exception {
+        Float flatMarkupPercentage = markupPercentageMap.get("FLAT_MARKUP");
+        if (flatMarkupPercentage != null) {
+            return baseValue += baseValue * (flatMarkupPercentage / 100);
+        }
+        else {
+            throw new Exception("Flat Markup percentage is not defined in the config file.");
+        }
     }
 
-    public float getCostAfterTotalMarkup() {
+    /** Get cost after applying all the markup percentages
+     * @return float
+     * @throws Exception
+     */
+    public float getCostAfterTotalMarkup() throws Exception {
+        String materialCategory = materialCategoryMap.get(materialType.toUpperCase());
+        float totalMarkup, costAfterTotalMarkup;
 
-        String materialCategory = materialCategories.get(materialType.toLowerCase());
-        float materialMarkup = materialBasedMarkupPercentage.get(materialCategory);
-        float costAfterFlatMarkup = getCostAfterFlatMarkup();
+        if (materialCategory == null) {
+            materialCategory = "MISCELLANEOUS";
+        }
+        Float materialMarkupPercentage = markupPercentageMap.get(materialCategory);
 
-        float totalMarkup = PER_PERSON_MARKUP_PERCENTAGE * noOfPersons + materialMarkup;
-        float costAfterTotalMarkup = costAfterFlatMarkup + costAfterFlatMarkup * (totalMarkup / 100);
+        if (materialMarkupPercentage != null) {
+            Float perPersonMarkupPercentage = markupPercentageMap.get("PER_PERSON_MARKUP");
+
+            if (perPersonMarkupPercentage != null) {
+                float costAfterFlatMarkup = getCostAfterFlatMarkup();
+                totalMarkup = perPersonMarkupPercentage * noOfPersons + materialMarkupPercentage;
+                costAfterTotalMarkup = costAfterFlatMarkup + costAfterFlatMarkup * (totalMarkup / 100);
+            }
+            else {
+                throw new Exception("Per person markup percentage is not defined in the config file.");
+            }
+        }
+        else {
+            throw new Exception("Per person markup percentage is not defined in the config file.");
+        }
 
         return Utils.roundOffFloat(costAfterTotalMarkup);
     }
