@@ -1,4 +1,4 @@
-package com.nulogy.util;
+package com.nulogy.assignment.util;
 
 import java.math.BigDecimal;
 

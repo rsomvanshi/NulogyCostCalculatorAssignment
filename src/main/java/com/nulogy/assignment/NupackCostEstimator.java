@@ -3,7 +3,7 @@ package com.nulogy.assignment;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.nulogy.util.Utils;
+import com.nulogy.assignment.util.Utils;
 
 /*
  * Created by rsomvanshi on 07/29/2017

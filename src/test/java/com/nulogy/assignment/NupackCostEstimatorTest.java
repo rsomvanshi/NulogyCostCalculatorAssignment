@@ -3,7 +3,7 @@ package com.nulogy.assignment;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-import com.nulogy.util.Utils;
+import com.nulogy.assignment.util.Utils;
 
 public class NupackCostEstimatorTest {
 
